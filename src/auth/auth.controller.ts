@@ -81,7 +81,6 @@ export class AuthController {
         id: { type: 'number', example: 1 },
         username: { type: 'string', example: 'john_doe' },
         email: { type: 'string', example: 'john@example.com' },
-        name: { type: 'string', example: 'John Doe' },
         isActive: { type: 'boolean', example: true },
       },
     },
@@ -92,7 +91,7 @@ export class AuthController {
   })
   async getProfile(@Request() req) {
     const user = await this.usersService.findOne(req.user.sub);
-    const { id, username, email, name, isActive } = user;
-    return { id, username, email, name, isActive };
+    const { id, username, email, isActive } = user;
+    return { id, username, email, isActive };
   }
 } 

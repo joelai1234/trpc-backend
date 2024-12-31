@@ -1,6 +1,20 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { networkInterfaces } from 'os';
+
+function getNetworkIp() {
+  const nets = networkInterfaces();
+  for (const name of Object.keys(nets)) {
+    for (const net of nets[name]) {
+      // Skip over non-IPv4 and internal (i.e. 127.0.0.1) addresses
+      if (net.family === 'IPv4' && !net.internal) {
+        return net.address;
+      }
+    }
+  }
+  return 'unknown';
+}
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -28,11 +42,18 @@ async function bootstrap() {
 
   // Enable CORS
   app.enableCors({
-    origin: 'http://localhost:3001', // Your frontend URL
+    origin: ['http://localhost:3000', 'http://192.168.137.180:3000'],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    credentials: true, // If you're using cookies or authentication headers
+    credentials: true,
   });
 
-  await app.listen(process.env.PORT ?? 3000);
+  const port = process.env.PORT || 3001;
+  await app.listen(port, '0.0.0.0'); // 监听所有网络接口
+  const localUrl = `http://localhost:${port}`;
+  const networkUrl = `http://${getNetworkIp()}:${port}`;
+
+  console.log('\x1b[36m%s\x1b[0m', '\nApp running at:');
+  console.log('  - Local:   ', '\x1b[36m', localUrl, '\x1b[0m');
+  console.log('  - Network: ', '\x1b[36m', networkUrl, '\x1b[0m\n');
 }
 bootstrap();

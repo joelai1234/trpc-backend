@@ -21,4 +21,4 @@ import { CharactersModule } from '../characters/characters.module';
   providers: [RoomsService],
   exports: [RoomsService],
 })
-export class RoomsModule {} 
+export class RoomsModule {}

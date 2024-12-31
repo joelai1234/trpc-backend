@@ -63,8 +63,8 @@ export class Room {
   @CreateDateColumn()
   createdAt: Date;
 
-  @ManyToOne(() => User, (user) => user.ownedRooms)
-  keeper: User;
+  @ManyToOne(() => User, (user) => user.hostedRooms)
+  host: User;
 
   @OneToMany(() => RoomPlayer, (roomPlayer) => roomPlayer.room)
   roomPlayers: RoomPlayer[];
@@ -81,4 +81,4 @@ export class Room {
 
   @DeleteDateColumn()
   deletedAt?: Date;
-} 
+}

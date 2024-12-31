@@ -118,4 +118,4 @@ export class CharactersController {
   async remove(@Param('id') id: number) {
     return this.charactersService.remove(id);
   }
-} 
+}

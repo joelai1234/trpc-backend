@@ -36,13 +36,6 @@ export class User {
   password: string;
 
   @ApiProperty({
-    example: 'John Doe',
-    description: 'The full name of the user',
-  })
-  @Column()
-  name: string;
-
-  @ApiProperty({
     example: true,
     description: 'Whether the user is active',
   })
@@ -52,6 +45,6 @@ export class User {
   @OneToMany(() => Character, (character) => character.user)
   characters: Character[];
 
-  @OneToMany(() => Room, (room) => room.keeper)
-  ownedRooms: Room[];
+  @OneToMany(() => Room, (room) => room.host)
+  hostedRooms: Room[];
 }

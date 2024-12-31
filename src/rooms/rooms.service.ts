@@ -14,6 +14,7 @@ import { ChatService } from '../chat/chat.service';
 import { AiService } from '../ai/ai.service';
 import { RoomPlayer } from './entities/room-player.entity';
 import { CharactersService } from '../characters/characters.service';
+import { ChatGateway } from '../chat/chat.gateway';
 
 @Injectable()
 export class RoomsService {
@@ -27,10 +28,12 @@ export class RoomsService {
     private readonly chatService: ChatService,
     private readonly aiService: AiService,
     private readonly charactersService: CharactersService,
+    @Inject(forwardRef(() => ChatGateway))
+    private readonly chatGateway: ChatGateway,
   ) {}
 
   private readonly defaultRelations = [
-    'keeper',
+    'host',
     'roomPlayers',
     'roomPlayers.player',
     'roomPlayers.character',
@@ -82,7 +85,9 @@ export class RoomsService {
       await this.roomPlayerRepository.save(roomPlayer);
     }
 
-    return this.findOne(roomId);
+    const updatedRoom = await this.findOne(roomId);
+    await this.chatGateway.broadcastRoomUpdate(roomId);
+    return updatedRoom;
   }
 
   async leaveRoom(roomId: number, userId: number): Promise<Room | null> {
@@ -104,12 +109,12 @@ export class RoomsService {
       `${leavingUser.username} 離開了房間。`,
     );
 
-    if (room.keeper.id === userId) {
+    if (room.host.id === userId) {
       if (remainingPlayers.length > 0) {
-        room.keeper = remainingPlayers[0].player;
+        room.host = remainingPlayers[0].player;
         await this.chatService.createSystemMessage(
           roomId,
-          `${room.keeper.username} 成為了新的房主。`,
+          `${room.host.username} 成為了新的房主。`,
         );
         await this.roomsRepository.save(room);
       } else {
@@ -119,11 +124,14 @@ export class RoomsService {
           '所有玩家已離開，房間已關閉。',
         );
         await this.roomsRepository.save(room);
+        await this.chatGateway.broadcastRoomUpdate(roomId);
         return null;
       }
     }
 
-    return this.findOne(roomId);
+    const updatedRoom = await this.findOne(roomId);
+    await this.chatGateway.broadcastRoomUpdate(roomId);
+    return updatedRoom;
   }
 
   async selectCharacter(
@@ -133,7 +141,7 @@ export class RoomsService {
   ): Promise<Room> {
     const roomPlayer = await this.roomPlayerRepository.findOne({
       where: { room: { id: roomId }, player: { id: userId } },
-      relations: ['character'],
+      relations: ['character', 'player'],
     });
 
     if (!roomPlayer) {
@@ -163,39 +171,50 @@ export class RoomsService {
     roomPlayer.isReady = true;
     await this.roomPlayerRepository.save(roomPlayer);
 
+    await this.chatService.createSystemMessage(
+      roomId,
+      `${roomPlayer.player.username} 選擇了角色 ${character.name}`,
+    );
+
+    await this.chatGateway.broadcastRoomUpdate(roomId);
+    
     return this.findOne(roomId);
   }
 
   async create(createRoomDto: CreateRoomDto, userId: number): Promise<Room> {
-    const keeper = await this.usersService.findOne(userId);
+    const host = await this.usersService.findOne(userId);
     const room = this.roomsRepository.create({
       ...createRoomDto,
-      keeper,
+      host,
     });
     const savedRoom = await this.roomsRepository.save(room);
     const roomPlayer = this.roomPlayerRepository.create({
       room: savedRoom,
-      player: keeper,
+      player: host,
     });
     await this.roomPlayerRepository.save(roomPlayer);
-    return this.findOne(savedRoom.id);
+
+    const updatedRoom = await this.findOne(savedRoom.id);
+    await this.chatGateway.broadcastRoomUpdate(savedRoom.id);
+    return updatedRoom;
   }
 
   async remove(id: number, userId: number): Promise<void> {
     const room = await this.findOne(id);
-    if (room.keeper.id !== userId) {
-      throw new BadRequestException('Only keeper can remove the room');
+    if (room.host.id !== userId) {
+      throw new BadRequestException('Only host can remove the room');
     }
     room.status = RoomStatus.ENDED;
     await this.chatService.createSystemMessage(id, '房主已關閉房間。');
     await this.roomsRepository.save(room);
+    await this.chatGateway.broadcastRoomUpdate(id);
   }
 
   async startGame(roomId: number, userId: number): Promise<Room> {
     const room = await this.findOne(roomId);
 
-    if (room.keeper.id !== userId) {
-      throw new BadRequestException('Only keeper can start the game');
+    if (room.host.id !== userId) {
+      throw new BadRequestException('Only host can start the game');
     }
 
     if (room.status !== RoomStatus.WAITING) {
@@ -229,6 +248,7 @@ export class RoomsService {
 
     this.generateGmOpeningResponse(room);
 
+    await this.chatGateway.broadcastRoomUpdate(roomId);
     return room;
   }
 
@@ -241,20 +261,20 @@ export class RoomsService {
             playerName: rp.player.username,
             characterName: character.name,
             occupation: character.occupation,
-            strength: character.strength,
-            constitution: character.constitution,
-            size: character.size,
-            dexterity: character.dexterity,
-            appearance: character.appearance,
-            intelligence: character.intelligence,
-            power: character.power,
-            education: character.education,
+            str: character.str,
+            con: character.con,
+            siz: character.siz,
+            dex: character.dex,
+            app: character.app,
+            int: character.int,
+            pow: character.pow,
+            edu: character.edu,
             hp: character.hp,
             maxHp: character.maxHp,
             mp: character.mp,
             maxMp: character.maxMp,
-            sanity: character.sanity,
-            maxSanity: character.maxSanity,
+            san: character.san,
+            maxSan: character.maxSan,
             luck: character.luck,
             skills: character.skills,
             background: character.background,
@@ -270,15 +290,15 @@ export class RoomsService {
            職業：${info.occupation}
            
            基礎屬性：
-           力量: ${info.strength}, 體質: ${info.constitution}, 體型: ${info.size}
-           敏捷: ${info.dexterity}, 外表: ${info.appearance}
-           智力: ${info.intelligence}, 意志: ${info.power}, 教育: ${info.education}
+           STR: ${info.str}, CON: ${info.con}, SIZ: ${info.siz}
+           DEX: ${info.dex}, APP: ${info.app}
+           INT: ${info.int}, POW: ${info.pow}, EDU: ${info.edu}
            
            當前狀態：
-           生命值: ${info.hp}/${info.maxHp}
-           魔法值: ${info.mp}/${info.maxMp}
-           理智值: ${info.sanity}/${info.maxSanity}
-           幸運值: ${info.luck}
+           HP: ${info.hp}/${info.maxHp}
+           MP: ${info.mp}/${info.maxMp}
+           SAN: ${info.san}/${info.maxSan}
+           LUCK: ${info.luck}
            
            技能：
            ${info.skills
@@ -317,5 +337,12 @@ export class RoomsService {
         '讓我們開始今天的冒險...',
       );
     }
+  }
+
+  async endGame(roomId: number) {
+    const room = await this.findOne(roomId);
+    room.status = RoomStatus.ENDED;
+    await this.roomsRepository.save(room);
+    this.aiService.clearRoomHistory(roomId);
   }
 }

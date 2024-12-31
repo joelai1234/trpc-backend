@@ -11,11 +11,7 @@ import {
 import { RoomsService } from './rooms.service';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { AuthGuard } from '../auth/auth.guard';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AiService } from '../ai/ai.service';
 import { SelectCharacterDto } from './dto/select-character.dto';
 
@@ -84,4 +80,4 @@ export class RoomsController {
       selectCharacterDto.characterId,
     );
   }
-} 
+}

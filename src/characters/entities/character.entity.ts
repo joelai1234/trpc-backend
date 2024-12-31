@@ -20,142 +20,149 @@ export class Character {
 
   @ApiProperty({
     example: '私家偵探',
-    description: '角色職業',
+    description: '職業 (Occupation)',
   })
   @Column()
   occupation: string;
 
   @ApiProperty({
     example: 35,
-    description: '角色年齡',
+    description: '年齡 (Age)',
   })
   @Column()
   age: number;
 
-  // 基礎屬性
+  // Core Characteristics
   @ApiProperty({
-    example: 65,
-    description: '力量值 (STR)',
+    example: 50,
+    description: 'STR (力量值) - 3D6×5 (15-90)',
   })
-  @Column()
-  strength: number;
-
-  @ApiProperty({
-    example: 70,
-    description: '體質值 (CON)',
-  })
-  @Column()
-  constitution: number;
-
-  @ApiProperty({
-    example: 55,
-    description: '體型值 (SIZ)',
-  })
-  @Column()
-  size: number;
-
-  @ApiProperty({
-    example: 80,
-    description: '敏捷值 (DEX)',
-  })
-  @Column()
-  dexterity: number;
-
-  @ApiProperty({
-    example: 60,
-    description: '外表值 (APP)',
-  })
-  @Column()
-  appearance: number;
-
-  @ApiProperty({
-    example: 75,
-    description: '智力值 (INT)',
-  })
-  @Column()
-  intelligence: number;
-
-  @ApiProperty({
-    example: 65,
-    description: '意志值 (POW)',
-  })
-  @Column()
-  power: number;
-
-  @ApiProperty({
-    example: 70,
-    description: '教育值 (EDU)',
-  })
-  @Column()
-  education: number;
-
-  // 衍生屬性
-  @ApiProperty({
-    example: 11,
-    description: '當前生命值',
-  })
-  @Column()
-  hp: number;
-
-  @ApiProperty({
-    example: 11,
-    description: '最大生命值',
-  })
-  @Column()
-  maxHp: number;
-
-  @ApiProperty({
-    example: 13,
-    description: '當前魔法值',
-  })
-  @Column()
-  mp: number;
-
-  @ApiProperty({
-    example: 13,
-    description: '最大魔法值',
-  })
-  @Column()
-  maxMp: number;
-
-  @ApiProperty({
-    example: 40,
-    description: '當前理智值',
-  })
-  @Column()
-  sanity: number;
-
-  @ApiProperty({
-    example: 99,
-    description: '最大理智值',
-  })
-  @Column()
-  maxSanity: number;
+  @Column({ name: 'str' })
+  str: number;
 
   @ApiProperty({
     example: 50,
-    description: '幸運值',
+    description: 'CON (體質值) - 3D6×5 (15-90)',
   })
-  @Column({ type: 'int' })
+  @Column({ name: 'con' })
+  con: number;
+
+  @ApiProperty({
+    example: 65,
+    description: 'SIZ (體型值) - (2D6+6)×5 (40-90)',
+  })
+  @Column({ name: 'siz' })
+  siz: number;
+
+  @ApiProperty({
+    example: 50,
+    description: 'DEX (敏捷值) - 3D6×5 (15-90)',
+  })
+  @Column({ name: 'dex' })
+  dex: number;
+
+  @ApiProperty({
+    example: 50,
+    description: 'APP (外表值) - 3D6×5 (15-90)',
+  })
+  @Column({ name: 'app' })
+  app: number;
+
+  @ApiProperty({
+    example: 65,
+    description: 'INT (智力值) - (2D6+6)×5 (40-90)',
+  })
+  @Column({ name: 'int' })
+  int: number;
+
+  @ApiProperty({
+    example: 50,
+    description: 'POW (意志值) - 3D6×5 (15-90)',
+  })
+  @Column({ name: 'pow' })
+  pow: number;
+
+  @ApiProperty({
+    example: 65,
+    description: 'EDU (教育值) - (2D6+6)×5 (40-90)',
+  })
+  @Column({ name: 'edu' })
+  edu: number;
+
+  // Derived Attributes
+  @ApiProperty({
+    example: 13,
+    description: 'HP (生命值) = (CON + SIZ) / 10',
+  })
+  @Column({ name: 'hp' })
+  hp: number;
+
+  @ApiProperty({
+    example: 13,
+    description: 'Max HP (最大生命值) = (CON + SIZ) / 10',
+  })
+  @Column({ name: 'max_hp' })
+  maxHp: number;
+
+  @ApiProperty({
+    example: 5,
+    description: 'MP (魔法值) = POW / 10',
+  })
+  @Column({ name: 'mp' })
+  mp: number;
+
+  @ApiProperty({
+    example: 5,
+    description: 'Max MP (最大魔法值) = POW / 10',
+  })
+  @Column({ name: 'max_mp' })
+  maxMp: number;
+
+  @ApiProperty({
+    example: 50,
+    description: 'SAN (理智值) = POW',
+  })
+  @Column({ name: 'san' })
+  san: number;
+
+  @ApiProperty({
+    example: 50,
+    description: 'Max SAN (最大理智值) = POW',
+  })
+  @Column({ name: 'max_san' })
+  maxSan: number;
+
+  @ApiProperty({
+    example: 50,
+    description: 'LUCK (幸運值) - 3D6×5 (15-90)',
+  })
+  @Column({ name: 'luck' })
   luck: number;
 
-  // 技能
+  @ApiProperty({
+    example: 8,
+    description: 'MOV (移動速率) - 基於STR、DEX和SIZ比較',
+  })
+  @Column({ name: 'mov' })
+  mov: number;
+
+  // Skills
   @ApiProperty({
     example: [
-      { name: '偵查', value: 65 },
-      { name: '圖書館使用', value: 50 },
-      { name: '母語', value: 80 },
+      { name: '偵查', value: 65, isOccupational: true },
+      { name: '圖書館使用', value: 50, isOccupational: true },
+      { name: '母語', value: 80, isOccupational: false },
     ],
-    description: '角色技能列表',
+    description: '技能列表 (包含職業技能和興趣技能)',
   })
   @Column('json')
   skills: {
     name: string;
     value: number;
-    isSuccess?: boolean;
+    isOccupational: boolean;
   }[];
 
-  // 背景故事
+  // Background
   @ApiProperty({
     example: '這是一個充滿神秘色彩的私家偵探...',
     description: '角色背景故事',
@@ -163,10 +170,10 @@ export class Character {
   @Column('text', { nullable: true })
   background: string;
 
-  // 裝備
+  // Equipment
   @ApiProperty({
     example: ['手槍', '偵探筆記本', '打火機'],
-    description: '角色裝備列表',
+    description: '裝備列表',
   })
   @Column('json', { nullable: true })
   equipment: string[];

@@ -18,10 +18,4 @@ export class RegisterDto {
     description: '密碼',
   })
   password: string;
-
-  @ApiProperty({
-    example: 'John Doe',
-    description: '用戶全名',
-  })
-  name: string;
 } 

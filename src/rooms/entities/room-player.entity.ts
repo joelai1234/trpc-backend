@@ -19,4 +19,4 @@ export class RoomPlayer {
 
   @Column({ default: false })
   isReady: boolean;
-} 
+}
