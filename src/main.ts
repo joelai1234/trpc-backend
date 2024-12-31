@@ -42,7 +42,11 @@ async function bootstrap() {
 
   // Enable CORS
   app.enableCors({
-    origin: ['http://localhost:3000', 'http://192.168.137.180:3000'],
+    origin: [
+      'http://localhost:3000',
+      'http://192.168.137.180:3000',
+      'https://coc-online.vercel.app',
+    ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
