@@ -45,9 +45,11 @@ async function bootstrap() {
     origin: [
       'http://localhost:3000',
       'http://192.168.137.180:3000',
+      'http://13.210.70.201:3000',
       'https://coc-online.vercel.app',
     ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: 'Content-Type,Authorization', // 允許的自定義標頭
     credentials: true,
   });
 
